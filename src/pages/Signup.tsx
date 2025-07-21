@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import { useNavigate } from "react-router-dom";
 import SignupForm from "@/components/signup-form";
@@ -12,10 +12,15 @@ export default function Signup() {
   const handlePasswordSignup = async (
     values: z.infer<typeof signupFormSchema>
   ) => {
-    const { data, error } = await supabase.auth.signUp(values);
+    const { error } = await supabase.auth.signUp(values);
+
     if (error) setError(error.message);
     else navigate("/login");
   };
+
+  useEffect(() => {
+    console.log(error);
+  }, [error]);
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">

@@ -128,7 +128,7 @@ function TaskManager() {
   const onTaskCreateHandler = async (
     values: z.infer<typeof addTaskFormSchema>
   ) => {
-    const { data, error } = await createTask({
+    const { error } = await createTask({
       ...values,
     });
 
@@ -144,7 +144,7 @@ function TaskManager() {
     taskId: string,
     values: z.infer<typeof addTaskFormSchema>
   ) => {
-    const { data, error } = await updateTask(taskId, {
+    const { error } = await updateTask(taskId, {
       ...values,
     });
 
@@ -157,7 +157,7 @@ function TaskManager() {
   };
 
   const onTaskDeleteHandler = async (taskId: string) => {
-    const { data, error } = await deleteTask(taskId);
+    const { error } = await deleteTask(taskId);
 
     if (error) {
       console.error("Error creating task:", error);
@@ -172,7 +172,6 @@ function TaskManager() {
     setOpenUpdateTaskModal(true);
   };
 
-  // ✅ Action: Delete task
   const handleDeleteTask = (task: Task) => {
     setSelectedTask(task);
     setOpenDeleteTaskConfirmationModal(true);
