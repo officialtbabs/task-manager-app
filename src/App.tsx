@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { Suspense, lazy } from "react";
 import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
@@ -13,7 +13,7 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        <Suspense fallback={<div />}>
+        <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/login" element={<AuthLayout />}>
               <Route index element={<Login />} />
