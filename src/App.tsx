@@ -13,7 +13,7 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div />}>
           <Routes>
             <Route path="/login" element={<AuthLayout />}>
               <Route index element={<Login />} />
