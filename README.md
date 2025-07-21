@@ -72,7 +72,7 @@ Apply this using the Supabase dashboard SQL editor or via migrations.
 ```sh
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Follow link provided to local development server.
 
 ---
 
@@ -101,13 +101,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Mobile responsiveness improvements
 - User profile management
 - Team/multi-user support
-- More comprehensive testing
+- Testing
 
 ---
 
 ## 🌐 Deployed App
 
-> _Optional: Add your deployed app link here if available._
+> [Live Demo](https://task-manager-app-ten-ochre.vercel.app)
 
 ---
 
