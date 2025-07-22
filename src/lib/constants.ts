@@ -1,3 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
 import z from "zod";
 
 export const emailPattern =
@@ -26,34 +27,39 @@ export const signupFormSchema = z.object({
     }),
 });
 
+export const taskStatus = z.enum(["pending", "in-progress", "done"]);
+
 export const taskSchema = z.object({
     id: z.uuid(),
     title: z.string().min(1),
     description: z.string().optional(),
+    status: taskStatus,
     extras: z.object({
         tags: z.string(),
         dueDate: z.date(),
         priority: z.string(),
     }).optional(),
-    status: z.enum(["pending", "in-progress", "done"]).optional(),
-    inserted_at: z.date(),
+    created_at: z.date(),
+    updated_at: z.date(),
 });
 
-export const addTaskFormSchema = taskSchema.omit({
+export const createTaskFormSchema = taskSchema.omit({
     id: true,
-    inserted_at: true,
-    // description: z.string().optional(),
-    // extras: z.object({
-    //     tags: z.string(),
-    //     dueDate: z.date(),
-    //     priority: z.string(),
-    // }).optional(),
-    // status: z.enum(["pending", "in-progress", "done"]).optional(),
+    status: true,
+    created_at: true,
+    updated_at: true,
 });
 
-export const updateTaskFormSchema = addTaskFormSchema;
+export const updateTaskFormSchema = taskSchema.omit({
+    id: true,
+    created_at: true,
+    updated_at: true,
+});
 
-export const taskManagerTableSchema = taskSchema.omit({
-    extras: true,
+export const taskTableSchema = taskSchema.omit({
     description: true,
+    extras: true,
+    updated_at: true,
 });
+
+export const queryClient = new QueryClient();

@@ -12,15 +12,15 @@ import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
-import { z } from "zod";
 import { loginFormSchema } from "@/lib/constants";
+import type { LoginFormData } from "@/lib/types";
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
-  onPasswordLogin: (values: z.infer<typeof loginFormSchema>) => void;
+  onPasswordLogin: (values: LoginFormData) => void;
 }
 
 function LoginForm({ className, onPasswordLogin, ...props }: LoginFormProps) {
-  const { control, handleSubmit } = useForm<z.infer<typeof loginFormSchema>>({
+  const { control, handleSubmit } = useForm<LoginFormData>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "",
@@ -28,8 +28,8 @@ function LoginForm({ className, onPasswordLogin, ...props }: LoginFormProps) {
     },
   });
 
-  const onSubmitHandler: SubmitHandler<z.infer<typeof loginFormSchema>> = (
-    values: z.infer<typeof loginFormSchema>
+  const onSubmitHandler: SubmitHandler<LoginFormData> = (
+    values: LoginFormData
   ) => {
     onPasswordLogin(values);
   };
