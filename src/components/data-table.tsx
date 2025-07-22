@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 
 interface DataTableProps<TData> {
+  isLoading: boolean;
   data: TData[];
   columns: ColumnDef<TData>[];
   filterSearchBy: string;
@@ -38,6 +39,7 @@ interface DataTableProps<TData> {
 }
 
 export function DataTable<TData>({
+  isLoading,
   data,
   columns,
   filterSearchBy,
@@ -101,6 +103,7 @@ export function DataTable<TData>({
                     {name} <ChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
+
                 <DropdownMenuContent align="end">
                   {options.map((option) => {
                     return (
@@ -142,6 +145,7 @@ export function DataTable<TData>({
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
@@ -150,7 +154,7 @@ export function DataTable<TData>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell className="h-16" key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -159,6 +163,15 @@ export function DataTable<TData>({
                   ))}
                 </TableRow>
               ))
+            ) : !table.getRowModel().rows?.length && isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <p className="animate-pulse"> Loading...</p>
+                </TableCell>
+              </TableRow>
             ) : (
               <TableRow>
                 <TableCell
@@ -172,6 +185,7 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       </div>
+
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="space-x-2">
           <Button
@@ -182,6 +196,7 @@ export function DataTable<TData>({
           >
             Previous
           </Button>
+
           <Button
             variant="outline"
             size="sm"

@@ -3,9 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
 import { useEffect } from "react";
-import { taskSchema, updateTaskFormSchema } from "@/lib/constants";
+import { updateTaskFormSchema } from "@/lib/constants";
 
 import {
   Dialog,
@@ -23,14 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type {
+  Task,
+  UpdateTaskFormData,
+  UpdateTaskRequestDto,
+} from "@/lib/types";
 
 interface UpdateTaskFormModalProps
   extends React.ComponentProps<React.FC<DialogProps>> {
-  initialValues: z.infer<typeof taskSchema> | null;
-  onTaskUpdate: (
-    taskId: string,
-    values: z.infer<typeof updateTaskFormSchema>
-  ) => void;
+  initialValues: Task | undefined;
+  onTaskUpdate: ({ id, ...values }: UpdateTaskRequestDto) => void;
 }
 
 function UpdateTaskFormModal({
@@ -38,9 +39,7 @@ function UpdateTaskFormModal({
   onTaskUpdate,
   ...props
 }: UpdateTaskFormModalProps) {
-  const { control, handleSubmit, setValue } = useForm<
-    z.infer<typeof updateTaskFormSchema>
-  >({
+  const { control, handleSubmit, setValue } = useForm<UpdateTaskFormData>({
     resolver: zodResolver(updateTaskFormSchema),
     defaultValues: {
       title: initialValues?.title,
@@ -49,11 +48,11 @@ function UpdateTaskFormModal({
     },
   });
 
-  const onSubmitHandler: SubmitHandler<z.infer<typeof updateTaskFormSchema>> = (
-    values: z.infer<typeof updateTaskFormSchema>
+  const onSubmitHandler: SubmitHandler<UpdateTaskFormData> = (
+    values: UpdateTaskFormData
   ) => {
     if (!initialValues) return;
-    onTaskUpdate(initialValues.id, values);
+    onTaskUpdate({ id: initialValues.id, ...values });
   };
 
   useEffect(() => {

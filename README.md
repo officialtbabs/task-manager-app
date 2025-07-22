@@ -55,7 +55,8 @@ create table tasks (
   description text,
   status text check (status in ('pending', 'in-progress', 'done')) default 'pending',
   extras jsonb,
-  inserted_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default null
 );
 
 alter table tasks enable row level security;
@@ -63,6 +64,21 @@ alter table tasks enable row level security;
 create policy "Users can access their own tasks"
 on tasks for all
 using (auth.uid() = user_id);
+
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+  if row(new) is distinct from row(old) then
+    new.updated_at = now();
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger set_updated_at
+before update on tasks
+for each row
+execute procedure update_updated_at_column();
 ```
 
 Apply this using the Supabase dashboard SQL editor or via migrations.
@@ -72,7 +88,7 @@ Apply this using the Supabase dashboard SQL editor or via migrations.
 ```sh
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Follow link provided to local development server.
 
 ---
 
@@ -85,9 +101,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
   - `description`: text, optional
   - `status`: text, enum: `'pending' | 'in-progress' | 'done'`, default `'pending'`
   - `extras`: JSONB, optional
-  - `inserted_at`: timestamp, default `now()`
+  - `created_at`: timestamp, default `now()`
+  - `updated_at`: timestamp, default `null`
 - **Row Level Security:** Only the owner (`user_id`) can access their tasks.
-
+- **Row trigger function:** An trigger was attached to all rows 
 ---
 
 ## 📝 Dev Note
@@ -101,13 +118,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Mobile responsiveness improvements
 - User profile management
 - Team/multi-user support
-- More comprehensive testing
+- Testing
 
 ---
 
 ## 🌐 Deployed App
 
-> _Optional: Add your deployed app link here if available._
+> [Live Demo](https://task-manager-app-ten-ochre.vercel.app)
 
 ---
 

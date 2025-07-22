@@ -122,7 +122,6 @@ Deno.serve(async (req) => {
       task = body;
     }
 
-    // call relevant method based on method and id
     switch (true) {
       case id && method === "GET":
         return getTask(supabaseClient, id as string);

@@ -1,32 +1,83 @@
 import { supabase } from "./supabase";
-import type z from "zod";
-import type { addTaskFormSchema, updateTaskFormSchema } from "@/lib/constants";
+import type {
+  CreateTaskRequestDto,
+  Task,
+  UpdateTaskRequestDto,
+} from "@/lib/types";
 
-export async function fetchTasks() {
-  return await supabase.functions.invoke("tasks", {
-    method: "GET",
-  });
+export function fetchTasks() {
+  return {
+    queryKey: ["tasks"],
+    queryFn: async function (): Promise<{
+      tasks: Task[];
+    }> {
+      const { data, error } = await supabase.functions.invoke("tasks", {
+        method: "GET",
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+  };
 }
 
-export async function createTask(task: z.infer<typeof addTaskFormSchema>) {
-  return await supabase.functions.invoke("tasks", {
-    method: "POST",
-    body: JSON.stringify(task),
-  });
+export function createTask() {
+  return {
+    mutationFn: async function (value: CreateTaskRequestDto) {
+      const { data, error } = await supabase.functions.invoke("tasks", {
+        method: "POST",
+        body: JSON.stringify(value),
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+  };
 }
 
-export async function updateTask(
-  id: string,
-  task: z.infer<typeof updateTaskFormSchema>,
-) {
-  return await supabase.functions.invoke(`tasks?id=${id}`, {
-    method: "PUT",
-    body: JSON.stringify(task),
-  });
+export function updateTask() {
+  return {
+    mutationFn: async function (
+      { id, ...values }: UpdateTaskRequestDto,
+    ) {
+      const { data, error } = await supabase.functions.invoke(
+        `tasks?id=${id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(values),
+        },
+      );
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+  };
 }
 
-export async function deleteTask(id: string) {
-  return await supabase.functions.invoke(`tasks?id=${id}`, {
-    method: "DELETE",
-  });
+export function deleteTask() {
+  return {
+    mutationFn: async function (id: string) {
+      const { data, error } = await supabase.functions.invoke(
+        `tasks?id=${id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+  };
 }

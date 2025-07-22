@@ -3,8 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { addTaskFormSchema } from "@/lib/constants";
+import { createTaskFormSchema } from "@/lib/constants";
 
 import {
   Dialog,
@@ -16,25 +15,24 @@ import {
 } from "@/components/ui/dialog";
 import type { DialogProps } from "@radix-ui/react-dialog";
 import { Textarea } from "./ui/textarea";
+import type { CreateTaskFormData } from "@/lib/types";
 
-interface AddTaskFormModalProps extends React.ComponentProps<React.FC<DialogProps>> {
-  onTaskCreate: (values: z.infer<typeof addTaskFormSchema>) => void;
+interface AddTaskFormModalProps
+  extends React.ComponentProps<React.FC<DialogProps>> {
+  onTaskCreate: (values: CreateTaskFormData) => void;
 }
 
-export default function AddTaskForm({
-  onTaskCreate,
-  ...props
-}: AddTaskFormModalProps) {
-  const { control, handleSubmit } = useForm<z.infer<typeof addTaskFormSchema>>({
-    resolver: zodResolver(addTaskFormSchema),
+function AddTaskFormModal({ onTaskCreate, ...props }: AddTaskFormModalProps) {
+  const { control, handleSubmit } = useForm<CreateTaskFormData>({
+    resolver: zodResolver(createTaskFormSchema),
     defaultValues: {
       title: "",
       description: "",
     },
   });
 
-  const onSubmitHandler: SubmitHandler<z.infer<typeof addTaskFormSchema>> = (
-    values: z.infer<typeof addTaskFormSchema>
+  const onSubmitHandler: SubmitHandler<CreateTaskFormData> = (
+    values: CreateTaskFormData
   ) => {
     onTaskCreate(values);
   };
@@ -100,3 +98,5 @@ export default function AddTaskForm({
     </>
   );
 }
+
+export default AddTaskFormModal;

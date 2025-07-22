@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import AddTaskForm from "../components/add-task-form-modal";
-import { addTaskFormSchema, taskManagerTableSchema } from "@/lib/constants";
-import z from "zod";
+import { useMemo, useState } from "react";
+import AddTaskFormModal from "../components/add-task-form-modal";
+import { queryClient } from "@/lib/constants";
 import {
   createTask,
   deleteTask,
@@ -29,13 +28,17 @@ import { MoreHorizontal } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import UpdateTaskFormModal from "@/components/update-task-form-modal";
 import DeleteTaskConfirmationModal from "@/components/delete-task-confirmation-modal";
-
-export type Task = z.infer<typeof taskManagerTableSchema>;
+import { useMutation, useQuery } from "@tanstack/react-query";
+import type {
+  CreateTaskRequestDto,
+  TaskTableData,
+  UpdateTaskRequestDto,
+} from "@/lib/types";
 
 function getTaskTableColumns(
-  onEdit: (task: Task) => void,
-  onDelete: (task: Task) => void
-): ColumnDef<Task>[] {
+  onEdit: (id: string) => void,
+  onDelete: (id: string) => void
+): ColumnDef<TaskTableData>[] {
   return [
     {
       accessorKey: "title",
@@ -61,11 +64,11 @@ function getTaskTableColumns(
       ),
     },
     {
-      accessorKey: "inserted_at",
+      accessorKey: "created_at",
       header: "Created At",
       cell: ({ row }) => (
         <div className="capitalize">
-          {formatDate(row.getValue("inserted_at"))}
+          {formatDate(row.getValue("created_at"))}
         </div>
       ),
     },
@@ -73,7 +76,7 @@ function getTaskTableColumns(
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const task = row.original;
+        const taskId = row.original.id;
 
         return (
           <DropdownMenu>
@@ -87,14 +90,14 @@ function getTaskTableColumns(
                 Actions
               </DropdownMenuLabel>
 
-              <DropdownMenuItem onClick={() => onEdit(task)}>
+              <DropdownMenuItem onClick={() => onEdit(taskId)}>
                 Update
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
                 variant="destructive"
-                onClick={() => onDelete(task)}
+                onClick={() => onDelete(taskId)}
               >
                 Delete
               </DropdownMenuItem>
@@ -111,77 +114,85 @@ const taskTableFilters: { name: string; options: string[] }[] = [
 ];
 
 function TaskManager() {
-  const [tasks, setTasks] = useState<z.infer<typeof taskManagerTableSchema>[]>(
-    []
-  );
+  const { data, isLoading } = useQuery(fetchTasks());
+
+  const { mutate: createTaskMutation } = useMutation(createTask());
+  const { mutate: updateTaskMutation } = useMutation(updateTask());
+  const { mutate: deleteTaskMutation } = useMutation(deleteTask());
+
+  const tasks = useMemo(() => data?.tasks || [], [data]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string>("");
+
   const [openAddTaskForm, setOpenAddTaskForm] = useState(false);
   const [openUpdateTaskModal, setOpenUpdateTaskModal] = useState(false);
   const [openDeleteTaskConfirmationModal, setOpenDeleteTaskConfirmationModal] =
     useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const loadTasks = async () => {
-    const { data } = await fetchTasks();
-    if (data) setTasks(data.tasks);
+  const selectedTask = useMemo(
+    () => tasks?.find((task) => task.id === selectedTaskId),
+    [tasks, selectedTaskId]
+  );
+
+  const refetchTasks = () => {
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
   };
 
-  const onTaskCreateHandler = async (
-    values: z.infer<typeof addTaskFormSchema>
-  ) => {
-    const { error } = await createTask({
-      ...values,
+  const onTaskCreateHandler = async (values: CreateTaskRequestDto) => {
+    createTaskMutation(values, {
+      onSuccess: () => {
+        setOpenAddTaskForm(false);
+        refetchTasks();
+      },
+      onError: (error) => {
+        console.error("Error creating task:", error);
+      },
     });
-
-    if (error) {
-      console.error("Error creating task:", error);
-      return;
-    }
-
-    setOpenAddTaskForm(false);
   };
 
-  const onTaskUpdateHandler = async (
-    taskId: string,
-    values: z.infer<typeof addTaskFormSchema>
-  ) => {
-    const { error } = await updateTask(taskId, {
-      ...values,
+  const onTaskUpdateHandler = async ({
+    id,
+    ...values
+  }: UpdateTaskRequestDto) => {
+    updateTaskMutation(
+      { id, ...values },
+      {
+        onSuccess: () => {
+          setOpenUpdateTaskModal(false);
+          refetchTasks();
+        },
+        onError: (error) => {
+          console.error("Error updating task:", error);
+        },
+      }
+    );
+  };
+
+  const onTaskDeleteHandler = async (id: string) => {
+    deleteTaskMutation(id, {
+      onSuccess: () => {
+        setOpenDeleteTaskConfirmationModal(false);
+        refetchTasks();
+      },
+      onError: (error) => {
+        console.error("Error deleting task:", error);
+      },
     });
-
-    if (error) {
-      console.error("Error creating task:", error);
-      return;
-    }
-
-    setOpenUpdateTaskModal(false);
   };
 
-  const onTaskDeleteHandler = async (taskId: string) => {
-    const { error } = await deleteTask(taskId);
-
-    if (error) {
-      console.error("Error creating task:", error);
-      return;
-    }
-
-    setOpenDeleteTaskConfirmationModal(false);
-  };
-
-  const handleUpdateTask = (task: Task) => {
-    setSelectedTask(task);
+  const onUpdateTaskRowActionClick = (id: string) => {
+    setSelectedTaskId(id);
     setOpenUpdateTaskModal(true);
   };
 
-  const handleDeleteTask = (task: Task) => {
-    setSelectedTask(task);
+  const onDeleteTaskRowActionClick = (id: string) => {
+    setSelectedTaskId(id);
     setOpenDeleteTaskConfirmationModal(true);
   };
 
-  const columns = getTaskTableColumns(handleUpdateTask, handleDeleteTask);
-
-  useEffect(() => {
-    loadTasks();
-  }, []);
+  const columns = getTaskTableColumns(
+    onUpdateTaskRowActionClick,
+    onDeleteTaskRowActionClick
+  );
 
   return (
     <>
@@ -189,7 +200,7 @@ function TaskManager() {
         <h1 className="text-xl font-bold mb-4">Task Manager</h1>
 
         <div className="flex justify-end">
-          <AddTaskForm
+          <AddTaskFormModal
             open={openAddTaskForm}
             onOpenChange={setOpenAddTaskForm}
             onTaskCreate={onTaskCreateHandler}
@@ -197,6 +208,7 @@ function TaskManager() {
         </div>
 
         <DataTable
+          isLoading={isLoading}
           data={tasks}
           columns={columns}
           filterSearchBy="title"
@@ -205,7 +217,7 @@ function TaskManager() {
       </div>
 
       <DeleteTaskConfirmationModal
-        taskId={selectedTask?.id}
+        taskId={selectedTaskId}
         open={openDeleteTaskConfirmationModal}
         onOpenChange={setOpenDeleteTaskConfirmationModal}
         onTaskDelete={onTaskDeleteHandler}
