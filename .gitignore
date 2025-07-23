@@ -25,3 +25,5 @@ dist-ssr
 
 .env*
 package-lock.json
+supabase/.branches/
+supabase/.temp/

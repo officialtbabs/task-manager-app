@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, displayFormErrors } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,13 +14,24 @@ import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { loginFormSchema } from "@/lib/constants";
 import type { LoginFormData } from "@/lib/types";
+import { useEffect } from "react";
 
 interface LoginFormProps extends React.ComponentProps<"div"> {
   onPasswordLogin: (values: LoginFormData) => void;
+  isLoading?: boolean;
 }
 
-function LoginForm({ className, onPasswordLogin, ...props }: LoginFormProps) {
-  const { control, handleSubmit } = useForm<LoginFormData>({
+function LoginForm({
+  className,
+  onPasswordLogin,
+  isLoading,
+  ...props
+}: LoginFormProps) {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "",
@@ -33,6 +44,10 @@ function LoginForm({ className, onPasswordLogin, ...props }: LoginFormProps) {
   ) => {
     onPasswordLogin(values);
   };
+
+  useEffect(() => {
+    displayFormErrors(errors);
+  }, [errors]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -88,11 +103,20 @@ function LoginForm({ className, onPasswordLogin, ...props }: LoginFormProps) {
                 )}
               />
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
-                  Login
+                <Button disabled={isLoading} type="submit" className="w-full">
+                  {isLoading ? (
+                    <span className="animate-pulse">Logining in...</span>
+                  ) : (
+                    "Login"
+                  )}
                 </Button>
 
-                <Button type="button" variant="outline" className="w-full">
+                <Button
+                  disabled
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                >
                   Login with Google
                 </Button>
               </div>

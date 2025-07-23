@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, displayFormErrors } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,17 +14,24 @@ import { useForm, Controller } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { signupFormSchema } from "@/lib/constants";
 import type { SignupFormData } from "@/lib/types";
+import { useEffect } from "react";
 
 interface SignupFormProps extends React.ComponentProps<"div"> {
   onPasswordSignup: (values: SignupFormData) => void;
+  isLoading?: boolean;
 }
 
 function SignupForm({
   className,
   onPasswordSignup,
+  isLoading,
   ...props
 }: SignupFormProps) {
-  const { control, handleSubmit } = useForm<SignupFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupFormData>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
       email: "",
@@ -37,6 +44,10 @@ function SignupForm({
   ) => {
     onPasswordSignup(values);
   };
+
+  useEffect(() => {
+    displayFormErrors(errors);
+  }, [errors]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -84,11 +95,20 @@ function SignupForm({
                 )}
               />
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
-                  Signup
+                <Button disabled={isLoading} type="submit" className="w-full">
+                  {isLoading ? (
+                    <span className="animate-pulse">Signing up...</span>
+                  ) : (
+                    "Signup"
+                  )}
                 </Button>
 
-                <Button type="button" variant="outline" className="w-full">
+                <Button
+                  disabled
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                >
                   Signup with Google
                 </Button>
               </div>

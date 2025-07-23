@@ -16,14 +16,25 @@ import {
 import type { DialogProps } from "@radix-ui/react-dialog";
 import { Textarea } from "./ui/textarea";
 import type { CreateTaskFormData } from "@/lib/types";
+import { useEffect } from "react";
+import { displayFormErrors } from "@/lib/utils";
 
 interface AddTaskFormModalProps
   extends React.ComponentProps<React.FC<DialogProps>> {
   onTaskCreate: (values: CreateTaskFormData) => void;
+  isLoading?: boolean;
 }
 
-function AddTaskFormModal({ onTaskCreate, ...props }: AddTaskFormModalProps) {
-  const { control, handleSubmit } = useForm<CreateTaskFormData>({
+function AddTaskFormModal({
+  onTaskCreate,
+  isLoading = false,
+  ...props
+}: AddTaskFormModalProps) {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateTaskFormData>({
     resolver: zodResolver(createTaskFormSchema),
     defaultValues: {
       title: "",
@@ -36,6 +47,10 @@ function AddTaskFormModal({ onTaskCreate, ...props }: AddTaskFormModalProps) {
   ) => {
     onTaskCreate(values);
   };
+
+  useEffect(() => {
+    displayFormErrors(errors);
+  }, [errors]);
 
   return (
     <>
@@ -87,8 +102,12 @@ function AddTaskFormModal({ onTaskCreate, ...props }: AddTaskFormModalProps) {
               />
 
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
-                  Create
+                <Button disabled={isLoading} type="submit" className="w-full">
+                  {isLoading ? (
+                    <span className="animate-pulse">Creating...</span>
+                  ) : (
+                    "Create"
+                  )}
                 </Button>
               </div>
             </div>

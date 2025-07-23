@@ -10,28 +10,27 @@ export const passwordText =
     "Password must be 8-64 characters long, with at least one uppercase letter, one lowercase letter, one number, and one special character";
 
 export const loginFormSchema = z.object({
-    email: z.string().regex(emailPattern, {
+    email: z.string().min(1, {
+        message: "Email is required.",
+    }).regex(emailPattern, {
         message: "Email must be a valid email address.",
     }),
-    password: z.string().regex(passwordPattern, {
+    password: z.string().min(1, {
+        message: "Password is required.",
+    }).regex(passwordPattern, {
         message: passwordText,
     }),
 });
 
-export const signupFormSchema = z.object({
-    email: z.string().regex(emailPattern, {
-        message: "Email must be a valid email address.",
-    }),
-    password: z.string().regex(passwordPattern, {
-        message: passwordText,
-    }),
-});
+export const signupFormSchema = loginFormSchema;
 
 export const taskStatus = z.enum(["pending", "in-progress", "done"]);
 
 export const taskSchema = z.object({
     id: z.uuid(),
-    title: z.string().min(1),
+    title: z.string().min(1, {
+        message: "Title is required.",
+    }),
     description: z.string().optional(),
     status: taskStatus,
     extras: z.object({
