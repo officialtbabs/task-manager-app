@@ -1,31 +1,34 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../services/supabase";
 import { useNavigate } from "react-router-dom";
 import SignupForm from "@/components/signup-form";
-import type z from "zod";
-import type { signupFormSchema } from "@/lib/constants";
+import { useMutation } from "@tanstack/react-query";
+import { signupUser } from "@/services/authService";
+import type { SignupFormData } from "@/lib/types";
+import { toast } from "sonner";
 
 export default function Signup() {
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
 
-  const handlePasswordSignup = async (
-    values: z.infer<typeof signupFormSchema>
-  ) => {
-    const { error } = await supabase.auth.signUp(values);
+  const { mutate: signupUserMutation, isPending } = useMutation(signupUser());
 
-    if (error) setError(error.message);
-    else navigate("/login");
+  const handlePasswordSignup = async (values: SignupFormData) => {
+    signupUserMutation(values, {
+      onSuccess: () => {
+        navigate("/login");
+      },
+
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
   };
-
-  useEffect(() => {
-    console.log(error);
-  }, [error]);
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <SignupForm onPasswordSignup={handlePasswordSignup} />
+        <SignupForm
+          isLoading={isPending}
+          onPasswordSignup={handlePasswordSignup}
+        />
       </div>
     </div>
   );

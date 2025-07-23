@@ -27,19 +27,28 @@ import type {
   UpdateTaskFormData,
   UpdateTaskRequestDto,
 } from "@/lib/types";
+import { displayFormErrors } from "@/lib/utils";
 
 interface UpdateTaskFormModalProps
   extends React.ComponentProps<React.FC<DialogProps>> {
   initialValues: Task | undefined;
   onTaskUpdate: ({ id, ...values }: UpdateTaskRequestDto) => void;
+  isLoading?: boolean;
 }
 
 function UpdateTaskFormModal({
   initialValues,
+
   onTaskUpdate,
+  isLoading = false,
   ...props
 }: UpdateTaskFormModalProps) {
-  const { control, handleSubmit, setValue } = useForm<UpdateTaskFormData>({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<UpdateTaskFormData>({
     resolver: zodResolver(updateTaskFormSchema),
     defaultValues: {
       title: initialValues?.title,
@@ -61,6 +70,10 @@ function UpdateTaskFormModal({
     setValue("description", initialValues.description);
     setValue("status", initialValues.status);
   }, [initialValues, setValue]);
+
+  useEffect(() => {
+    displayFormErrors(errors);
+  }, [errors]);
 
   return (
     <>
@@ -132,8 +145,12 @@ function UpdateTaskFormModal({
               />
 
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
-                  Update
+                <Button disabled={isLoading} type="submit" className="w-full">
+                  {isLoading ? (
+                    <span className="animate-pulse">Updating...</span>
+                  ) : (
+                    "Update"
+                  )}
                 </Button>
               </div>
             </div>

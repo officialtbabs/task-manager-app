@@ -14,11 +14,13 @@ interface DeleteTaskConfirmationModalProps
   extends React.ComponentProps<React.FC<DialogProps>> {
   taskId: string | undefined;
   onTaskDelete: (taskId: string) => void;
+  isLoading?: boolean;
 }
 
 function DeleteTaskConfirmationModal({
   taskId,
   onTaskDelete,
+  isLoading = false,
   ...props
 }: DeleteTaskConfirmationModalProps) {
   return (
@@ -49,11 +51,16 @@ function DeleteTaskConfirmationModal({
             </DialogClose>
 
             <Button
+              disabled={isLoading}
               variant="destructive"
               onClick={() => onTaskDelete(taskId!)}
               className="w-full"
             >
-              Delete
+              {isLoading ? (
+                <span className="animate-pulse">Deleting...</span>
+              ) : (
+                "Delete"
+              )}
             </Button>
           </div>
         </DialogContent>

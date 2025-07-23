@@ -34,6 +34,7 @@ import type {
   TaskTableData,
   UpdateTaskRequestDto,
 } from "@/lib/types";
+import { toast } from "sonner";
 
 function getTaskTableColumns(
   onEdit: (id: string) => void,
@@ -116,9 +117,15 @@ const taskTableFilters: { name: string; options: string[] }[] = [
 function TaskManager() {
   const { data, isLoading } = useQuery(fetchTasks());
 
-  const { mutate: createTaskMutation } = useMutation(createTask());
-  const { mutate: updateTaskMutation } = useMutation(updateTask());
-  const { mutate: deleteTaskMutation } = useMutation(deleteTask());
+  const { mutate: createTaskMutation, isPending: isCreatingTask } = useMutation(
+    createTask()
+  );
+  const { mutate: updateTaskMutation, isPending: isUpdatingTask } = useMutation(
+    updateTask()
+  );
+  const { mutate: deleteTaskMutation, isPending: isDeletingTask } = useMutation(
+    deleteTask()
+  );
 
   const tasks = useMemo(() => data?.tasks || [], [data]);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
@@ -144,7 +151,7 @@ function TaskManager() {
         refetchTasks();
       },
       onError: (error) => {
-        console.error("Error creating task:", error);
+        toast.error(error.message);
       },
     });
   };
@@ -161,7 +168,7 @@ function TaskManager() {
           refetchTasks();
         },
         onError: (error) => {
-          console.error("Error updating task:", error);
+          toast.error(error.message);
         },
       }
     );
@@ -174,7 +181,7 @@ function TaskManager() {
         refetchTasks();
       },
       onError: (error) => {
-        console.error("Error deleting task:", error);
+        toast.error(error.message);
       },
     });
   };
@@ -201,6 +208,7 @@ function TaskManager() {
 
         <div className="flex justify-end">
           <AddTaskFormModal
+            isLoading={isCreatingTask}
             open={openAddTaskForm}
             onOpenChange={setOpenAddTaskForm}
             onTaskCreate={onTaskCreateHandler}
@@ -216,18 +224,20 @@ function TaskManager() {
         />
       </div>
 
-      <DeleteTaskConfirmationModal
-        taskId={selectedTaskId}
-        open={openDeleteTaskConfirmationModal}
-        onOpenChange={setOpenDeleteTaskConfirmationModal}
-        onTaskDelete={onTaskDeleteHandler}
-      />
-
       <UpdateTaskFormModal
+        isLoading={isUpdatingTask}
         initialValues={selectedTask}
         open={openUpdateTaskModal}
         onOpenChange={setOpenUpdateTaskModal}
         onTaskUpdate={onTaskUpdateHandler}
+      />
+
+      <DeleteTaskConfirmationModal
+        isLoading={isDeletingTask}
+        taskId={selectedTaskId}
+        open={openDeleteTaskConfirmationModal}
+        onOpenChange={setOpenDeleteTaskConfirmationModal}
+        onTaskDelete={onTaskDeleteHandler}
       />
     </>
   );
